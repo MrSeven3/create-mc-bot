@@ -92,6 +92,12 @@ def register_player(ack,respond,command):
             print("Failed to register: username was invalid")
             respond("That is not a valid Minecraft username! Please try again, or if you believe this was a mistake, contact an admin")
             return
+
+        if len(username) == 0 or len(username) > 17:
+            print("Failed to register: username too long or short")
+            respond("That is not a valid Minecraft username! Please try again, or if you believe this was a mistake, contact an admin")
+            return
+
         slack_id = command['user_id']
 
         cursor.execute("USE `create-mc`")
