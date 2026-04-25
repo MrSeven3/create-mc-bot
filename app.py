@@ -178,5 +178,5 @@ def reject_suggestion(ack,respond,body):
 #        log_error(str(e))
 #        print(str(e))
 
-if __name__ == "__main__":
-    SocketModeHandler(app, os.environ["SLACK_APP_TOKEN"]).start()
+
+SocketModeHandler(app, os.environ["SLACK_APP_TOKEN"]).start()
