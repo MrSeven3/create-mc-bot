@@ -13,13 +13,16 @@ load_dotenv()
 # Initializes your app with your bot token and socket mode handler
 app = App(token=os.environ.get("SLACK_BOT_TOKEN"))
 
-db = mysql.connector.connect(
+pool = mysql.connector.pooling.MySQLConnectionPool(
     host=os.environ.get("DB_HOST"),
     user=os.environ.get("DB_USERNAME"),
     password=os.environ.get('DB_PASSWORD'),
-    port=os.environ.get("DB_PORT")
+    port=os.environ.get("DB_PORT"),
+    pool_size=5,
+    pool_reset_session=True,
+
 )
-cursor = db.cursor()
+
 
 def log_error(error):
     app.client.chat_postMessage(
@@ -75,7 +78,9 @@ def handle_message_events(body, logger):
 
 @app.command("/register-account")
 def register_player(ack,respond,command):
+    conn = pool.get_connection()
     try:
+        cursor = conn.cursor()
         auth_disabled = os.environ.get("AUTH_DISABLED")
 
         ack()
@@ -115,7 +120,7 @@ def register_player(ack,respond,command):
                 sql = "INSERT INTO `authorized_users` (`slack_id`,`minecraft_username`,`registered`) VALUES (%s,%s,NOW())"
                 cursor.execute(sql,(slack_id,username))
 
-                db.commit()
+                conn.commit()
 
                 respond("Your account has been successfully registered! Join the server at `create-mc.hackclub.community`")
                 print("Account successfully registered")
@@ -126,6 +131,8 @@ def register_player(ack,respond,command):
         log_error(str(e))
         print("An error occurred: "+str(e))
         respond("Something went very wrong! Please contact an admin, even if you can join the server! Give them the time that you ran this command.")
+    finally:
+        conn.close()
 
 @app.command("/suggest-mod")
 def forward_suggestion(ack, respond, command):
